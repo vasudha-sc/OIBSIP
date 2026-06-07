@@ -1,0 +1,279 @@
+<! DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global Temp Converter</title>
+<style>
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+body {
+background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+padding: 20px;
+}
+
+.app-card {
+background: rgba(255, 255, 255, 0.85);
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+width: 100%;
+max-width: 360px;
+border-radius: 28px;
+box-shadow: 0 16px 32px rgba(0, 0, 0, 0.08);
+padding: 28px;
+border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.header {
+margin-bottom: 28px;
+}
+
+h1 {
+font-size: 22px;
+font-weight: 800;
+color: #1d1d1f;
+letter-spacing: -0.5px;
+}
+
+.subtitle {
+font-size: 13px;
+color: #86868b;
+margin-top: 4px;
+}
+
+.input-stack {
+display: flex;
+flex-direction: column;
+gap: 16px;
+margin-bottom: 24px;
+}
+
+.field-container {
+background: rgba(255, 255, 255, 0.7);
+border: 1px solid #e5e5ea;
+border-radius: 16px;
+padding: 12px 16px;
+transition: all 0.2s ease;
+}
+
+.field-container:focus-within {
+border-color: #5856d6;
+box-shadow: 0 0 0 4px rgba(88, 86, 214, 0.1);
+}
+
+label {
+display: block;
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: #86868b;
+font-weight: 700;
+margin-bottom: 4px;
+}
+
+input {
+border: none;
+background: transparent;
+font-size: 24px;
+font-weight: 600;
+color: #1d1d1f;
+width: 100%;
+outline: none;
+}
+
+select {
+border: none;
+background: transparent;
+font-size: 16px;
+font-weight: 600;
+color: #1d1d1f;
+width: 100%;
+outline: none;
+cursor: pointer;
+appearance: none;
+The background image is set using an SVG XML string, which defines a simple arrow icon.
+background-repeat: no-repeat;
+background-position: right center;
+background-size: 16px;
+}
+
+.output-card {
+background: #1d1d1f;
+border-radius: 20px;
+padding: 20px;
+color: white;
+margin-bottom: 24px;
+min-height: 100px;
+display: flex;
+flex-direction: column;
+justify-content: center;
+transition: all 0.3s ease;
+}
+
+.output-label {
+font-size: 11px;
+text-transform: uppercase;
+letter-spacing: 0.5px;
+color: #86868b;
+font-weight: 700;
+margin-bottom: 6px;
+}
+
+.main-result {
+font-size: 28px;
+font-weight: 700;
+letter-spacing: -0.5px;
+}
+
+.secondary-results {
+font-size: 14px;
+color: #eaeaea;
+margin-top: 8px;
+display: flex;
+gap: 12px;
+}
+
+.error-banner {
+background: #ff3b30;
+color: white;
+font-size: 13px;
+font-weight: 600;
+padding: 12px;
+border-radius: 12px;
+margin-bottom: 16px;
+text-align: center;
+display: none;
+animation: shake 0.3s ease;
+}
+
+.btn-action {
+background: #5856d6;
+color: white;
+border: none;
+width: 100%;
+padding: 16px;
+border-radius: 16px;
+font-size: 16px;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.2s ease;
+box-shadow: 0 4px 12px rgba(88, 86, 214, 0.3);
+}
+
+.btn-action:hover {
+background: #4745b4;
+box-shadow: 0 6px 16px rgba(88, 86, 214, 0.4);
+}
+
+.btn-action:active {
+transform: scale(0.98);
+}
+
+@keyframes shake {
+0%, 100% { transform: translateX(0); }
+25% { transform: translateX(-4px); }
+75% { transform: translateX(4px); }
+}
+</style>
+</head>
+<body>
+
+<div class="app-card">
+<div class="header">
+<h1>Metrics</h1>
+<div class="subtitle">Precision Temperature Converter</div>
+</div>
+
+<div class="error-banner" id="errorBanner">Please enter a valid numeric temperature</div>
+
+<div class="input-stack">
+<div class="field-container">
+<label for="tempInput">Source Value</label>
+<input type="text" id="tempInput" placeholder="0.00" inputmode="decimal">
+</div>
+<div class="field-container">
+<label for="unitSelect">Source Unit</label>
+<select id="unitSelect">
+<option value="C" selected>Celsius (°C)</option>
+<option value="F">Fahrenheit (°F)</option>
+<option value="K">Kelvin (K)</option>
+</select>
+</div>
+</div>
+
+<div class="output-card">
+<div class="output-label">Converted Metrics</div>
+<div class="main-result" id="primaryOutput">--</div>
+<div class="secondary-results" id="secondaryOutput"></div>
+</div>
+
+<button class="btn-action" id="actionBtn">Calculate Conversion</button>
+</div>
+
+<script>
+document.getElementById('actionBtn').addEventListener('click', function() {
+const tempInput = document.getElementById('tempInput');
+const unitSelect = document.getElementById('unitSelect');
+const primaryOutput = document.getElementById('primaryOutput');
+const secondaryOutput = document.getElementById('secondaryOutput');
+const errorBanner = document.getElementById('errorBanner');
+const rawVal = tempInput.value.trim();
+const value = parseFloat(rawVal);
+const unit = unitSelect.value;
+
+if (rawVal === "" || isNaN(value)) {
+errorBanner.style.display = 'block';
+primaryOutput.textContent = '--';
+secondaryOutput.innerHTML = '';
+return;
+}
+if ((unit === 'C' && value < -273.15) ||
+(unit === 'F' && value < -459.67) ||
+(unit === 'K' && value < 0)) {
+errorBanner.textContent = "Temperature falls below absolute zero!";
+errorBanner.style.display = 'block';
+primaryOutput.textContent = '--';
+secondaryOutput.innerHTML = '';
+return;
+}
+
+errorBanner.style.display = 'none';
+errorBanner.textContent = "Please enter a valid numeric temperature";
+
+let c, f, k;
+
+if (unit === 'C') {
+c = value;
+f = (c * 9/5) + 32;
+k = c + 273.15;
+primaryOutput.innerHTML = `${cleanNum(f)} <span style="font-size: 18px; color: #86868b;">°F</span>`;
+secondaryOutput.innerHTML = `<span>${cleanNum(k)} K</span>`;
+} else if (unit === 'F') {
+f = value;
+c = (f - 32) * 5/9;
+k = c + 273.15;
+primaryOutput.innerHTML = `${cleanNum(c)} <span style="font-size: 18px; color: #86868b;">°C</span>`;
+secondaryOutput.innerHTML = `<span>${cleanNum(k)} K</span>`;
+} else if (unit === 'K') {
+k = value;
+c = k - 273.15;
+f = (c * 9/5) + 32;
+primaryOutput.innerHTML = `${cleanNum(c)} <span style="font-size: 18px; color: #86868b;">°C</span>`;
+secondaryOutput.innerHTML = `<span>${cleanNum(f)} °F</span>`;
+}
+});
+
+function cleanNum(num) {
+return parseFloat(num.toFixed(4)).toString();
+}
+</script>
+</body>
+</html>
